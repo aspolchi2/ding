@@ -8,6 +8,7 @@ import { ToastContainer } from "react-toastify";
 
 import { useEffect, useState } from "react";
 import { Order } from "@/app/components/OrderCard";
+import { useParams } from "next/navigation";
 
 interface Pedido {
   id: string;
@@ -21,11 +22,12 @@ interface Pedido {
 export default function DashboardPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+  const params = useParams();
 
   const getOrders = async () => {
     setLoading(true);
     try {
-      const response = await fetch("/api/orders");
+      const response = await fetch(`/api/${params.slug}/orders`);
       if (!response.ok) {
         showErrorToast("Error fetching orders");
         throw new Error("Network response was not ok");
@@ -40,12 +42,12 @@ export default function DashboardPage() {
   };
   const onStatusUpdate = async (orderId: string, newStatus: string) => {
     try {
-      const response = await fetch(`/api/orders/${orderId}`, {
+      const response = await fetch(`/api/${params.slug}/orders/${orderId}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ estado: newStatus }),
+        body: JSON.stringify({ status: newStatus }),
       });
 
       if (!response.ok) {
@@ -73,10 +75,12 @@ export default function DashboardPage() {
   const successCallback = (newOrder: Order) => {
     setOrders((prevOrders) => [newOrder, ...prevOrders]);
     showSuccessToast("Pedido creado exitosamente");
+    getOrders();
   };
 
   return (
     <main className="min-h-screen p-6 bg-gradient-to-br from-zinc-50 to-zinc-100">
+      <ToastContainer />
       {/* Header */}
       <header className="flex items-center gap-3 mb-8">
         <div className="flex items-center justify-center w-10 h-10 text-lg font-bold text-white rounded-full bg-zinc-900">

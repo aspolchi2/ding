@@ -1,22 +1,27 @@
-import { cookies } from "next/headers";
-import { BACKEND_URL } from "@/app/config/constant";
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 
-export async function GET(request: Request, { params }: { params: Promise<{ slug: string }> }) {
-  const cookieStore = await cookies();
-  const bearer_token = cookieStore.get("bearer_token")?.value;
-  const { slug } = await params;
-  console.log("Bearer token:", bearer_token);
-  console.log("Slug:", slug);
+export async function GET(
+  request: Request,
+  { params }: { params: Promise<{ slug: string; terminalId: string }> }
+) {
   try {
-    const response = await fetch(`${BACKEND_URL}/orders/`, {
-      headers: {
-        "ngrok-skip-browser-warning": "true",
-        Authorization: `Bearer ${bearer_token}`,
-      },
-    });
+    const { slug, terminalId } = await params;
+    
+    const response = await fetch(
+      `${BACKEND_URL}/${slug}/terminal_qr/${terminalId}`,
+      {
+        headers: {
+          "ngrok-skip-browser-warning": "true",
+        },
+      }
+    );
 
     if (!response.ok) {
-      console.error("Backend response not ok:", response.statusText);
+      console.error(
+        "Backend response not ok:",
+        response.status,
+        response.statusText
+      );
       return Response.json(
         { error: `Backend error: ${response.status}` },
         { status: response.status }
@@ -24,7 +29,6 @@ export async function GET(request: Request, { params }: { params: Promise<{ slug
     }
 
     const data = await response.json();
-    console.log("Data:", data);
     return Response.json(data);
   } catch (error) {
     console.error("Fetch error:", error);
@@ -36,20 +40,18 @@ export async function GET(request: Request, { params }: { params: Promise<{ slug
   }
 }
 
-export async function POST(request: Request, { params }: { params: Promise<{ slug: string }> }) {
-  const cookieStore = await cookies();
-  const bearer_token = cookieStore.get("bearer_token")?.value;
-  const { slug } = await params;
-  console.log("Slug:", slug);
-
+export async function POST(
+  request: Request,
+  { params }: { params: Promise<{ slug: string; terminalId: string }> }
+) {
   try {
+    const { slug, terminalId } = await params;
     const body = await request.json();
-    const response = await fetch(`${BACKEND_URL}/orders/`, {
+    const response = await fetch(`${BACKEND_URL}/${slug}/terminal_qr/${terminalId}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         "ngrok-skip-browser-warning": "true",
-        authorization: `Bearer ${bearer_token}`,
       },
       body: JSON.stringify(body),
     });

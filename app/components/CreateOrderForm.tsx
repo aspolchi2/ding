@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Order } from "./OrderCard";
+import { useParams } from "next/navigation";
 
 interface CreateOrderFormProps {
   onOrderCreated: (order: Order) => void;
@@ -16,26 +17,24 @@ export function CreateOrderForm({ onOrderCreated }: CreateOrderFormProps) {
     qr_base64: string;
     qr_url: string;
   } | null>(null);
+  const params = useParams();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      const response = await fetch(
-        "https://nonmythologically-undefensible-tracie.ngrok-free.dev/orders/",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            order_id: orderId,
-            customer_name: customerName,
-            terminal_id: terminalId,
-          }),
-        }
-      );
+      const response = await fetch(`/api/${params.slug}/orders`, {
+        method: "POST",
+        body: JSON.stringify({
+          order_id: orderId,
+          customer_name: customerName,
+          terminal_id: terminalId,
+        }),
+      });
 
       const newOrder = await response.json();
+      console.log("New order created:", newOrder);
       onOrderCreated(newOrder);
       setQrData({ qr_base64: newOrder.qr_base64, qr_url: newOrder.qr_url });
 
