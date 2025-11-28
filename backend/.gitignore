@@ -1,0 +1,9 @@
+# Ignore Python virtual environments
+backend/env/
+
+# Bytecode
+*.pyc
+__pycache__/
+
+# SQLite DB (si querés evitar subirla)
+# backend/db.sqlite3
