@@ -2,26 +2,31 @@ from django.shortcuts import render
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
-from .models import Order
+from .models import Order, RestaurantUser
 from .serializers import OrderSerializer, OrderPublicSerializer
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 import qrcode, io, base64
 from django.shortcuts import redirect
+from rest_framework_simplejwt.tokens import RefreshToken
+from .serializers import RegisterSerializer, LoginSerializer, OrderLookupSerializer
+from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
+from django.contrib.auth import get_user_model
 
-QR_BASE_URL = "http://127.0.0.1:8000/terminal_qr/"
-ORDER_BASE_URL = "http://127.0.0.1:8000/view_order/"
+QR_BASE_URL = "https://ding-3ota.vercel.app/r/"
+ORDER_BASE_URL = "https://ef26a3988a80.ngrok-free.app/view_order/"
 
 class OrderViewSet(viewsets.ViewSet):
     lookup_field = 'order_id'
+    permission_classes = [IsAuthenticated]
 
     def list(self, request):
-        orders = Order.objects.all().order_by('-created_at')  # ordenados del más nuevo al más viejo
+        orders = Order.objects.filter(restaurant_user=request.user).order_by('-created_at')  # ordenados del más nuevo al más viejo
         serializer = OrderSerializer(orders, many=True)
         return Response(serializer.data)
 
-    def retrieve(self, request, uuid=None):
-        order = get_object_or_404(Order, uuid=uuid)
+    def retrieve(self, request, order_id=None):
+        order = get_object_or_404(Order, order_id=order_id, restaurant_user=request.user)
         order.last_viewed_at = timezone.now()  # 👈 actualiza la fecha/hora
         order.save(update_fields=["last_viewed_at"])  # 👈 guarda solo ese campo
         serializer = OrderSerializer(order)
@@ -30,10 +35,11 @@ class OrderViewSet(viewsets.ViewSet):
     def create(self, request):
         serializer = OrderSerializer(data=request.data)
         if serializer.is_valid():
-            order = serializer.save()
+            order = serializer.save(restaurant_user=request.user)
 
             # ✅ Generar URL con UUID
-            qr_url = f"{QR_BASE_URL}{order.terminal_id}"
+            #qr_url = f"{QR_BASE_URL}{order.terminal_id}"
+            qr_url = f"{QR_BASE_URL}{request.user.restaurant_uuid}/terminal/{order.terminal_id}"
 
             # ✅ Generar QR
             qr = qrcode.make(qr_url)
@@ -58,32 +64,47 @@ class OrderViewSet(viewsets.ViewSet):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def partial_update(self, request, order_id=None):
-        order = get_object_or_404(Order, order_id=order_id)
+        order = get_object_or_404(Order, order_id=order_id, restaurant_user=request.user)
         serializer = OrderSerializer(order, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    @action(detail=False, methods=['delete'])
+    def delete_all(self, request):
+        orders = Order.objects.filter(restaurant_user=request.user)
+        count = orders.count()
+        orders.delete()
+
+        return Response(
+            {"message": f"Se eliminaron {count} pedidos."},
+            status=status.HTTP_200_OK
+        )
 
 class TerminalQRViewSet(viewsets.ViewSet):
-    def retrieve(self, request, pk=None):
+    def retrieve(self, request, restaurant_uuid=None, terminal_id=None):
         """
         Cuando el cliente escanea el QR físico de la terminal,
         se lo redirige al último pedido creado en esa terminal que aún no fue visto.
         """
+        restaurant = get_object_or_404(RestaurantUser, restaurant_uuid=restaurant_uuid)
+        
         order = Order.objects.filter(
-            terminal_id=pk,
+            restaurant_user=restaurant,
+            terminal_id=terminal_id,
             first_viewed_at__isnull=True
         ).order_by('-created_at').first()
 
         if order:
             order.first_viewed_at = timezone.now()
             order.save(update_fields=["first_viewed_at"])
+
             order_url = f"{ORDER_BASE_URL}{order.order_id}"
             return redirect(order_url)
 
         return Response(
-            {"detail": "No hay pedidos disponibles para esta terminal."},
+            {"detail": "No hay pedidos para esta terminal."},
             status=status.HTTP_404_NOT_FOUND
         )
 
@@ -98,3 +119,88 @@ class ViewOrderViewSet(viewsets.ViewSet):
         order = get_object_or_404(Order, order_id=order_id)
         serializer = OrderPublicSerializer(order)
         return Response(serializer.data)
+    
+    def create(self, request):
+        """
+        Busca un pedido usando restaurant_uuid + order_id.
+        Permite que el cliente recupere su pedido manualmente.
+        """
+        serializer = OrderLookupSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        restaurant_uuid = serializer.validated_data['restaurant_uuid']
+        order_id = serializer.validated_data['order_id']
+
+        # Buscar restaurante
+        user = RestaurantUser.objects.filter(
+            restaurant_uuid=restaurant_uuid
+        ).first()
+
+        if not user:
+            return Response(
+                {"error": "El restaurante no existe."},
+                status=400
+            )
+
+        # Buscar pedido del restaurante
+        order = Order.objects.filter(
+            restaurant_user=user,
+            order_id=order_id
+        ).first()
+
+        if not order:
+            return Response(
+                {"error": "No existe un pedido con ese ID para este restaurante."},
+                status=404
+            )
+
+        return Response(OrderPublicSerializer(order).data)
+
+class AuthViewSet(viewsets.ViewSet):
+
+    permission_classes = [AllowAny]  # cambiar según acción
+
+    @action(detail=False, methods=['post'], permission_classes=[IsAdminUser])
+    def register(self, request):
+        serializer = RegisterSerializer(data=request.data)
+        
+        if serializer.is_valid():
+            user = serializer.save()
+            refresh = RefreshToken.for_user(user)
+
+            return Response({
+                "message": "Usuario registrado correctamente",
+                "access": str(refresh.access_token),
+                "refresh": str(refresh),
+            }, status=status.HTTP_201_CREATED)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=False, methods=['post'], permission_classes=[AllowAny])
+    def login(self, request):
+        serializer = LoginSerializer(data=request.data)
+        
+        if serializer.is_valid():
+            user = serializer.validated_data["user"]
+            refresh = RefreshToken.for_user(user)
+
+            return Response({
+                "message": "Login exitoso",
+                "access": str(refresh.access_token),
+                "refresh": str(refresh),
+                "restaurant_name": user.restaurant_name,
+            })
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
+    def me(self, request):
+        """Devuelve datos del usuario logueado"""
+        user = request.user
+        return Response({
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "email": user.email,
+            "phone": user.phone,
+            "restaurant_name": user.restaurant_name,
+        })

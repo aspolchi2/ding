@@ -1,5 +1,6 @@
 # Ignore Python virtual environments
 backend/env/
+backend/.env/
 
 # Bytecode
 *.pyc
