@@ -2,7 +2,6 @@
 
 import { CreateOrderForm } from "@/app/components/CreateOrderForm";
 import { OrderList } from "@/app/components/OrderList";
-import type React from "react";
 import { showSuccessToast, showErrorToast } from "@/app/components/Toast";
 import { ToastContainer } from "react-toastify";
 

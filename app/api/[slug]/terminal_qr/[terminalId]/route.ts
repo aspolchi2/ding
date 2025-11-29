@@ -1,4 +1,4 @@
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
+import { BACKEND_URL } from "@/app/config/constant";
 
 export async function GET(
   request: Request,
@@ -6,14 +6,9 @@ export async function GET(
 ) {
   try {
     const { slug, terminalId } = await params;
-    
+
     const response = await fetch(
-      `${BACKEND_URL}/${slug}/terminal_qr/${terminalId}`,
-      {
-        headers: {
-          "ngrok-skip-browser-warning": "true",
-        },
-      }
+      `${BACKEND_URL}/${slug}/terminal_qr/${terminalId}`
     );
 
     if (!response.ok) {
@@ -47,11 +42,10 @@ export async function POST(
   try {
     const { slug, terminalId } = await params;
     const body = await request.json();
-    const response = await fetch(`${BACKEND_URL}/${slug}/terminal_qr/${terminalId}`, {
+    const response = await fetch(`${BACKEND_URL}/terminal_qr/${terminalId}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "ngrok-skip-browser-warning": "true",
       },
       body: JSON.stringify(body),
     });
