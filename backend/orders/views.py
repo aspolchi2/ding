@@ -121,7 +121,7 @@ class TerminalQRViewSet(viewsets.ViewSet):
         )
 
 class ViewOrderViewSet(viewsets.ViewSet):
-    lookup_field = 'order_id'
+    lookup_field = 'restaurant_uuid'
 
     # def retrieve(self, request, order_id=None):
     #     """
@@ -141,7 +141,8 @@ class ViewOrderViewSet(viewsets.ViewSet):
         serializer.is_valid(raise_exception=True)
 
         restaurant_uuid = serializer.validated_data['restaurant_uuid']
-        order_id = serializer.validated_data['order_id']
+        #order_id = serializer.validated_data['order_id']
+        terminal_id = serializer.validated_data['terminal_id']
 
         # Buscar restaurante
         user = RestaurantUser.objects.filter(
@@ -157,7 +158,7 @@ class ViewOrderViewSet(viewsets.ViewSet):
         # Buscar pedido del restaurante
         order = Order.objects.filter(
             restaurant_user=user,
-            order_id=order_id
+            terminal_id=terminal_id
         ).first()
 
         if not order:
