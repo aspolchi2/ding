@@ -132,7 +132,7 @@ class ViewOrderViewSet(viewsets.ViewSet):
     #     serializer = OrderPublicSerializer(order)
     #     return Response(serializer.data)
     
-    def retrieve(self, request):
+    def create(self, request):
         """
         Busca un pedido usando restaurant_uuid + order_id.
         Permite que el cliente recupere su pedido manualmente.
