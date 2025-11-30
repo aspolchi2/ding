@@ -70,4 +70,4 @@ class OrderPublicSerializer(serializers.ModelSerializer):
         
 class OrderLookupSerializer(serializers.Serializer):
     restaurant_uuid = serializers.UUIDField()
-    order_id = serializers.CharField()
+    terminal_id = serializers.CharField()

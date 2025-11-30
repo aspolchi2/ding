@@ -137,6 +137,7 @@ class ViewOrderViewSet(viewsets.ViewSet):
         Busca un pedido usando restaurant_uuid + order_id.
         Permite que el cliente recupere su pedido manualmente.
         """
+        print(request.data)
         serializer = OrderLookupSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
