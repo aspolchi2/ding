@@ -155,17 +155,20 @@ class ViewOrderViewSet(viewsets.ViewSet):
                 status=400
             )
 
-        # Buscar pedido del restaurante
         order = Order.objects.filter(
-            restaurant_user=user,
-            terminal_id=terminal_id
-        ).first()
+                restaurant_user=user,
+                terminal_id=terminal_id
+            ).order_by('-created_at').first()
 
         if not order:
             return Response(
                 {"error": "No existe un pedido con ese ID para este restaurante."},
                 status=404
             )
+        
+        if not order.first_viewed_at:
+            order.first_viewed_at = timezone.now()
+            order.save(update_fields=["first_viewed_at"])
 
         return Response(OrderPublicSerializer(order).data)
 

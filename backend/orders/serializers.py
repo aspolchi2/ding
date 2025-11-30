@@ -66,11 +66,7 @@ class OrderSerializer(serializers.ModelSerializer):
 class OrderPublicSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
-        fields = (
-            'order_id',
-            'customer_name',
-            'status',
-        )
+        fields = '__all__'
         
 class OrderLookupSerializer(serializers.Serializer):
     restaurant_uuid = serializers.UUIDField()
