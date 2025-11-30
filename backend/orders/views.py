@@ -14,7 +14,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
 from django.contrib.auth import get_user_model
 
 QR_BASE_URL = "https://ding-3ota.vercel.app/r/"
-ORDER_BASE_URL = "https://ef26a3988a80.ngrok-free.app/view_order/"
+ORDER_BASE_URL = "https://ding-3ota.vercel.app/view_order/"
 
 class OrderViewSet(viewsets.ViewSet):
     lookup_field = 'order_id'
