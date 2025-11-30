@@ -14,8 +14,8 @@ urlpatterns = [
     path('', include(routes.urls)),
     path('admin/', admin.site.urls),
     path(
-        'terminal_qr/<uuid:restaurant_uuid>/<str:terminal_id>/',
+        'qr/<uuid:restaurant_uuid>/<str:terminal_id>/',
         TerminalQRViewSet.as_view({'get': 'retrieve'}),
-        name='terminal_qr'
+        name='qr'
     ),
 ]
