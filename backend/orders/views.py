@@ -16,6 +16,17 @@ from django.contrib.auth import get_user_model
 QR_BASE_URL = "https://ding-6hg3.onrender.com/qr/"
 ORDER_BASE_URL = "https://ding-3ota.vercel.app/view_order/"
 
+class RestaurantListViewSet(viewsets.ViewSet):
+    permission_classes = [AllowAny]
+
+    def list(self, request):
+        restaurantes = RestaurantUser.objects.all().values(
+            "restaurant_name",
+            "restaurant_uuid"
+        )
+
+        return Response(list(restaurantes))
+
 class OrderViewSet(viewsets.ViewSet):
     lookup_field = 'order_id'
     permission_classes = [IsAuthenticated]
