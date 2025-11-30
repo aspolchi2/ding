@@ -13,7 +13,8 @@ from .serializers import RegisterSerializer, LoginSerializer, OrderLookupSeriali
 from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
 from django.contrib.auth import get_user_model
 
-QR_BASE_URL = "https://ding-6hg3.onrender.com/qr/"
+#QR_BASE_URL = "https://ding-6hg3.onrender.com/qr/"
+QR_BASE_URL = "https://ding-3ota.vercel.app/r/"
 ORDER_BASE_URL = "https://ding-3ota.vercel.app/view_order/"
 
 class RestaurantListViewSet(viewsets.ViewSet):
@@ -122,16 +123,16 @@ class TerminalQRViewSet(viewsets.ViewSet):
 class ViewOrderViewSet(viewsets.ViewSet):
     lookup_field = 'order_id'
 
-    def retrieve(self, request, order_id=None):
-        """
-        Devuelve el estado actual del pedido (ej: PENDING, READY, RETRIEVED)
-        para mostrar en la app web del cliente.
-        """
-        order = get_object_or_404(Order, order_id=order_id)
-        serializer = OrderPublicSerializer(order)
-        return Response(serializer.data)
+    # def retrieve(self, request, order_id=None):
+    #     """
+    #     Devuelve el estado actual del pedido (ej: PENDING, READY, RETRIEVED)
+    #     para mostrar en la app web del cliente.
+    #     """
+    #     order = get_object_or_404(Order, order_id=order_id)
+    #     serializer = OrderPublicSerializer(order)
+    #     return Response(serializer.data)
     
-    def create(self, request):
+    def retrieve(self, request):
         """
         Busca un pedido usando restaurant_uuid + order_id.
         Permite que el cliente recupere su pedido manualmente.
