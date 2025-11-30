@@ -1,12 +1,9 @@
 import { cookies } from "next/headers";
 import { BACKEND_URL } from "@/app/config/constant";
 
-export async function GET(request: Request, { params }: { params: Promise<{ slug: string }> }) {
+export async function GET() {
   const cookieStore = await cookies();
   const bearer_token = cookieStore.get("bearer_token")?.value;
-  const { slug } = await params;
-  console.log("Bearer token:", bearer_token);
-  console.log("Slug:", slug);
   try {
     const response = await fetch(`${BACKEND_URL}/orders/`, {
       headers: {
@@ -24,7 +21,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ slug
     }
 
     const data = await response.json();
-    console.log("Data:", data);
+
     return Response.json(data);
   } catch (error) {
     console.error("Fetch error:", error);
@@ -36,7 +33,10 @@ export async function GET(request: Request, { params }: { params: Promise<{ slug
   }
 }
 
-export async function POST(request: Request, { params }: { params: Promise<{ slug: string }> }) {
+export async function POST(
+  request: Request,
+  { params }: { params: Promise<{ slug: string }> }
+) {
   const cookieStore = await cookies();
   const bearer_token = cookieStore.get("bearer_token")?.value;
   const { slug } = await params;

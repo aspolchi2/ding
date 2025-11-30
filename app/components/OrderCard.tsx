@@ -8,22 +8,16 @@ export interface Order {
   order_id: string;
   customer_name: string;
   terminal_id: string;
-  status: string;
+  status: status;
   created_at: string;
   first_viewed_at?: string;
 }
+export type status = "PENDING" | "READY" | "RETRIEVED" | "DELETED";
 
 interface OrderCardProps {
   order: Order;
-  onStatusUpdate: (orderId: string, newStatus: string) => void;
+  onStatusUpdate: (orderId: string, newStatus: status) => void;
 }
-
-const statusOptions = [
-  { value: "PENDING", label: "Pendiente" },
-  { value: "PREPARING", label: "Preparando" },
-  { value: "READY", label: "Listo" },
-  { value: "RETRIEVED", label: "Entregado" },
-];
 
 export function OrderCard({ order, onStatusUpdate }: OrderCardProps) {
   const formatTime = (dateString: string) => {
@@ -68,7 +62,7 @@ export function OrderCard({ order, onStatusUpdate }: OrderCardProps) {
           </button>
           <button
             className="p-2 border rounded cursor-pointer text-zinc-500 hover:text-zinc-700 border-zinc-200"
-            onClick={() => onStatusUpdate(order.order_id, "DELETE")}
+            onClick={() => onStatusUpdate(order.order_id, "DELETED")}
           >
             <Trash2 />
           </button>

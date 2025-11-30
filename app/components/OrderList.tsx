@@ -1,21 +1,14 @@
 "use client";
 
-import { OrderCard } from "./OrderCard";
-
-interface Order {
-  uuid: string;
-  order_id: string;
-  customer_name: string;
-  terminal_id: string;
-  status: string;
-  created_at: string;
-  first_viewed_at?: string;
-}
+import { Order, OrderCard, status } from "./OrderCard";
 
 interface OrderListProps {
   orders: Order[];
   loading: boolean;
-  onStatusUpdate: (orderId: string, newStatus: string) => void;
+  onStatusUpdate: (
+    orderId: string,
+    newStatus: status
+  ) => void;
 }
 
 export function OrderList({ orders, loading, onStatusUpdate }: OrderListProps) {
@@ -37,15 +30,15 @@ export function OrderList({ orders, loading, onStatusUpdate }: OrderListProps) {
         Pedidos Activos
       </h2>
 
-      {orders.length === 0 ? (
+      {orders?.length === 0 ? (
         <div className="py-12 text-center">
           <p className="text-zinc-500">No hay pedidos activos</p>
         </div>
       ) : (
         <div className="space-y-4 h-[70vh] overflow-y-auto ">
-          {orders.map((order) => (
+          {orders?.map((order, index) => (
             <OrderCard
-              key={order.uuid}
+              key={index}
               order={order}
               onStatusUpdate={onStatusUpdate}
             />

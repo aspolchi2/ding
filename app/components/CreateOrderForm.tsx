@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Order } from "./OrderCard";
 import { useParams } from "next/navigation";
+import { useOrderStore } from "../store/useOrderStore";
 
 interface CreateOrderFormProps {
   onOrderCreated: (order: Order) => void;
@@ -18,6 +19,7 @@ export function CreateOrderForm({ onOrderCreated }: CreateOrderFormProps) {
     qr_url: string;
   } | null>(null);
   const params = useParams();
+  const { addOrder, orders } = useOrderStore();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,13 +36,14 @@ export function CreateOrderForm({ onOrderCreated }: CreateOrderFormProps) {
       });
 
       const newOrder = await response.json();
-      console.log("New order created:", newOrder);
+      addOrder(newOrder);
       onOrderCreated(newOrder);
       setQrData({ qr_base64: newOrder.qr_base64, qr_url: newOrder.qr_url });
 
       // Reset form
       setOrderId("");
       setCustomerName("");
+      
     } catch (error) {
       console.error("Error creating order:", error);
     } finally {
@@ -62,7 +65,7 @@ export function CreateOrderForm({ onOrderCreated }: CreateOrderFormProps) {
             value={orderId}
             onChange={(e) => setOrderId(e.target.value)}
             required
-            className="w-full px-3 py-2 mt-1 border rounded border-zinc-300 focus:border-zinc-900 focus:outline-none"
+            className="w-full px-3 py-2 mt-1 border rounded border-zinc-300 focus:border-zinc-900 focus:outline-none text-zinc-700 "
             placeholder="A123"
           />
         </div>
@@ -76,7 +79,7 @@ export function CreateOrderForm({ onOrderCreated }: CreateOrderFormProps) {
             value={customerName}
             onChange={(e) => setCustomerName(e.target.value)}
             required
-            className="w-full px-3 py-2 mt-1 border rounded border-zinc-300 focus:border-zinc-900 focus:outline-none"
+            className="w-full px-3 py-2 mt-1 border rounded border-zinc-300 focus:border-zinc-900 focus:outline-none text-zinc-700"
             placeholder="Juan Pérez"
           />
         </div>
@@ -88,7 +91,7 @@ export function CreateOrderForm({ onOrderCreated }: CreateOrderFormProps) {
           <select
             value={terminalId}
             onChange={(e) => setTerminalId(e.target.value)}
-            className="w-full px-3 py-2 mt-1 border rounded border-zinc-300 focus:border-zinc-900 focus:outline-none"
+            className="w-full px-3 py-2 mt-1 border rounded border-zinc-300 focus:border-zinc-900 focus:outline-none text-zinc-700"
           >
             <option value="1">Terminal 1</option>
             <option value="2">Terminal 2</option>

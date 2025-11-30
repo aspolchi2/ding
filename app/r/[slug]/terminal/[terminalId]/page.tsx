@@ -54,6 +54,32 @@ const Page = ({ params }: PageProps) => {
     }
   };
 
+  const newOrderNumber = async () => {
+    const body = JSON.stringify({
+      terminal_id: terminalId,
+      restaurant_uuid: slug,
+      order_number: orderNumber,
+    });
+    try {
+      const response = await fetch(`/api/${slug}/terminal_qr/${terminalId}`, {
+        method: "post",
+        body: body,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Error al obtener el pedido");
+      }
+
+      const data = await response.json();
+      console.log(data);
+    } catch (error) {
+      console.error("Error:", error);
+    }
+  };
+
   return (
     <div className="min-h-screen p-4 bg-gray-50">
       <div className="max-w-md p-6 mx-auto bg-white rounded-lg shadow-md">
@@ -112,7 +138,7 @@ const Page = ({ params }: PageProps) => {
             </div>
           )} */}
           {!showOrderInput ? (
-            <button 
+            <button
               onClick={() => setShowOrderInput(true)}
               className="w-full text-sm text-center text-gray-500 hover:text-gray-700"
             >
@@ -127,18 +153,13 @@ const Page = ({ params }: PageProps) => {
                 <input
                   type="text"
                   value={orderNumber}
-                  onChange={(e) => setOrderNumber(e.target.value)}
+                  onChange={(e) => setOrderNumber(e.target.value.trim())}
                   placeholder="Número de pedido"
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-zinc-700"
                 />
                 <button
-                  onClick={() => {
-                    if (orderNumber.trim()) {
-                      console.log("Nuevo número de pedido:", orderNumber);
-                      // Aquí puedes agregar la lógica para buscar el pedido
-                    }
-                  }}
-                  className="px-4 py-2 text-white bg-blue-500 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  onClick={() => newOrderNumber}
+                  className="px-4 py-2 text-white bg-black rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   Buscar
                 </button>

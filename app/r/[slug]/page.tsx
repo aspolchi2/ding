@@ -6,22 +6,24 @@ import { showSuccessToast, showErrorToast } from "@/app/components/Toast";
 import { ToastContainer } from "react-toastify";
 
 import { useEffect, useState } from "react";
-import { Order } from "@/app/components/OrderCard";
+import { Order, status } from "@/app/components/OrderCard";
 import { useParams } from "next/navigation";
-
-interface Pedido {
-  id: string;
-  numeroPedido: string;
-  nombreCliente: string;
-  numeroCaja: string;
-  estado: "pendiente" | "realizado";
-  fecha: string;
-}
+import CompletedOrders from "@/app/components/CompletedOrders";
+import { useOrderStore } from "@/app/store/useOrderStore";
 
 export default function DashboardPage() {
-  const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const params = useParams();
+  const {
+    orders,
+    setOrders,
+    getCompletedOrders,
+    getActiveOrders,
+    updateOrderStatus,
+  } = useOrderStore((state) => state);
+
+  const activeOrders = getActiveOrders();
+  const completedOrders = getCompletedOrders();
 
   const getOrders = async () => {
     setLoading(true);
@@ -32,6 +34,7 @@ export default function DashboardPage() {
         throw new Error("Network response was not ok");
       }
       const data = await response.json();
+
       setOrders(data);
       setLoading(false);
     } catch (error) {
@@ -39,7 +42,7 @@ export default function DashboardPage() {
       showErrorToast("Error fetching orders");
     }
   };
-  const onStatusUpdate = async (orderId: string, newStatus: string) => {
+  const onStatusUpdate = async (orderId: string, newStatus: status) => {
     try {
       const response = await fetch(`/api/${params.slug}/orders/${orderId}`, {
         method: "PATCH",
@@ -55,11 +58,7 @@ export default function DashboardPage() {
       }
 
       const updatedOrder = await response.json();
-      setOrders((prevOrders) =>
-        prevOrders.map((order) =>
-          order.order_id === orderId ? updatedOrder : order
-        )
-      );
+      updateOrderStatus(orderId, newStatus);
       showSuccessToast("Order status updated successfully");
     } catch (error) {
       console.error("Error updating order status:", error);
@@ -72,11 +71,8 @@ export default function DashboardPage() {
   }, []);
 
   const successCallback = (newOrder: Order) => {
-    setOrders((prevOrders) => [newOrder, ...prevOrders]);
     showSuccessToast("Pedido creado exitosamente");
-    getOrders();
   };
-
   return (
     <main className="min-h-screen p-6 bg-gradient-to-br from-zinc-50 to-zinc-100">
       <ToastContainer />
@@ -96,10 +92,13 @@ export default function DashboardPage() {
         <CreateOrderForm onOrderCreated={successCallback} />
         {/* Right Section - Lista de Pedidos */}
         <OrderList
-          orders={orders}
+          orders={activeOrders}
           loading={loading}
           onStatusUpdate={onStatusUpdate}
         />
+      </div>
+      <div className="">
+        <CompletedOrders orders={completedOrders} />
       </div>
     </main>
   );
