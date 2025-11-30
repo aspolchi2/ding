@@ -121,7 +121,7 @@ class TerminalQRViewSet(viewsets.ViewSet):
         )
 
 class ViewOrderViewSet(viewsets.ViewSet):
-    lookup_field = 'restaurant_uuid'
+    #lookup_field = 'restaurant_uuid'
 
     # def retrieve(self, request, order_id=None):
     #     """
@@ -131,6 +131,10 @@ class ViewOrderViewSet(viewsets.ViewSet):
     #     order = get_object_or_404(Order, order_id=order_id)
     #     serializer = OrderPublicSerializer(order)
     #     return Response(serializer.data)
+
+    def list(self, request):
+        # opcional: devolver algo o dejarlo vacío
+        return Response({"detail": "OK"})
     
     def create(self, request):
         """
