@@ -13,7 +13,7 @@ from .serializers import RegisterSerializer, LoginSerializer, OrderLookupSeriali
 from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
 from django.contrib.auth import get_user_model
 
-QR_BASE_URL = "https://ding-3ota.vercel.app/r/"
+QR_BASE_URL = "https://ding-3ota.vercel.app/qr/"
 ORDER_BASE_URL = "https://ding-3ota.vercel.app/view_order/"
 
 class OrderViewSet(viewsets.ViewSet):
