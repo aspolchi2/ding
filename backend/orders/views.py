@@ -136,7 +136,7 @@ class ViewOrderViewSet(viewsets.ViewSet):
         # opcional: devolver algo o dejarlo vacío
         return Response({"detail": "OK"})
     
-    def create(self, request):
+    def create(self, request, order_id=None):
         """
         Busca un pedido usando restaurant_uuid + order_id.
         Permite que el cliente recupere su pedido manualmente.
@@ -174,6 +174,43 @@ class ViewOrderViewSet(viewsets.ViewSet):
         if not order.first_viewed_at:
             order.first_viewed_at = timezone.now()
             order.save(update_fields=["first_viewed_at"])
+
+        return Response(OrderPublicSerializer(order).data)
+
+    # ---------------------------------------------
+    # 💥 NUEVO MÉTODO EXTRA: revisar un pedido exacto
+    # ---------------------------------------------
+    @action(detail=True, methods=['post'], url_path='check')
+    def check_order(self, request, pk=None):
+        """
+        Busca un pedido específico: order_id + restaurant_uuid + terminal_id.
+        pk = order_id desde la URL
+        """
+        # pk = <order_id> capturado por DRF en la URL
+
+        serializer = OrderLookupSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        restaurant_uuid = serializer.validated_data["restaurant_uuid"]
+        terminal_id = serializer.validated_data["terminal_id"]
+
+        # Buscar restaurante
+        user = RestaurantUser.objects.filter(
+            restaurant_uuid=restaurant_uuid
+        ).first()
+
+        if not user:
+            return Response({"error": "El restaurante no existe"}, status=400)
+
+        # Buscar un pedido con TODOS los filtros:
+        order = Order.objects.filter(
+            restaurant_user=user,
+            terminal_id=terminal_id,
+            order_id=pk
+        ).first()
+
+        if not order:
+            return Response({"error": "No existe un pedido que matchee los 3 valores"}, status=404)
 
         return Response(OrderPublicSerializer(order).data)
 
