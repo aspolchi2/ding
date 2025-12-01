@@ -6,10 +6,14 @@ export async function GET(
 ) {
   try {
     const { slug, terminalId } = await params;
+    console.log("Fetching orders for slug:", slug);
+    console.log("Fetching orders for terminalId:", terminalId);
 
     const response = await fetch(
-      `${BACKEND_URL}/${slug}/terminal_qr/${terminalId}`
+      `${BACKEND_URL}/qr/${slug}/terminal/${terminalId}`
     );
+
+    console.log(response);
 
     if (!response.ok) {
       console.error(
@@ -40,9 +44,9 @@ export async function POST(
   { params }: { params: Promise<{ slug: string; terminalId: string }> }
 ) {
   try {
-    const { slug, terminalId } = await params;
     const body = await request.json();
-    const response = await fetch(`${BACKEND_URL}/terminal_qr/${terminalId}`, {
+    console.log(body);
+    const response = await fetch(`${BACKEND_URL}/view_order/`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -51,7 +55,6 @@ export async function POST(
     });
 
     if (!response.ok) {
-      console.error("Backend response not ok:", response.status);
       return Response.json(
         { error: `Backend error: ${response.status}` },
         { status: response.status }

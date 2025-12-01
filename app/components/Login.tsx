@@ -7,9 +7,11 @@ import { useRouter } from "next/navigation";
 export function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
+    setLoading(true);
     e.preventDefault();
     // Simple validation - in production use proper auth
     try {
@@ -34,14 +36,16 @@ export function LoginForm() {
       console.log("Login response:", data);
     } catch (error) {
       console.error("Login error:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="w-full max-w-md rounded-xl border border-zinc-200 bg-white p-8 shadow-lg">
+    <div className="w-full max-w-md p-8 bg-white border shadow-lg rounded-xl border-zinc-200">
       {/* Header */}
       <div className="mb-6 text-center">
-        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-zinc-900">
+        <div className="flex items-center justify-center mx-auto mb-4 rounded-full h-14 w-14 bg-zinc-900">
           <span className="text-2xl font-bold text-white">D</span>
         </div>
         <h1 className="text-2xl font-bold text-zinc-900">Bienvenido a Ding</h1>
@@ -91,7 +95,7 @@ export function LoginForm() {
         <div className="flex justify-end">
           <a
             href="#"
-            className="text-sm text-zinc-500 transition-colors hover:text-zinc-900"
+            className="text-sm transition-colors text-zinc-500 hover:text-zinc-900"
           >
             ¿Olvidaste tu contraseña?
           </a>
@@ -101,10 +105,10 @@ export function LoginForm() {
           type="submit"
           className="w-full rounded-lg bg-zinc-900 py-2.5 text-sm font-medium text-white transition-colors hover:bg-zinc-800 active:bg-zinc-950"
         >
-          Iniciar sesión
+          {loading ? "Iniciando sesión..." : "Iniciar sesión"}
         </button>
 
-        <p className="text-center text-sm text-zinc-500">
+        <p className="text-sm text-center text-zinc-500">
           ¿No tienes cuenta?{" "}
           <a href="#" className="font-medium text-zinc-900 hover:underline">
             Regístrate

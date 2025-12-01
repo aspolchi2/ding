@@ -7,12 +7,25 @@ interface PageProps {
     terminalId: string;
   };
 }
+interface order {
+  id: number;
+  uuid: string;
+  order_id: string;
+  customer_name: string;
+  terminal_id: string;
+  status: string;
+  created_at: string;
+  first_viewed_at: string;
+  last_viewed_at: null;
+  restaurant_user: number;
+}
 
 const Page = ({ params }: PageProps) => {
   const [whatsappNumber, setWhatsappNumber] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [showOrderInput, setShowOrderInput] = useState(false);
   const [orderNumber, setOrderNumber] = useState("");
+  const [order, setOrder] = useState<order>();
   //@ts-expect-error params used in use()
   const { slug, terminalId } = use(params);
 
@@ -35,15 +48,45 @@ const Page = ({ params }: PageProps) => {
       }
 
       const data = await response.json();
+      setOrder(data);
       console.log(data);
     } catch (error) {
       console.error("Error:", error);
     }
   };
 
+  const checkOrder = async () => {
+    const response = fetch(`/api/${slug}/check_order`, {
+      method: "POST",
+      body: JSON.stringify({
+        order_id: order?.order_id,
+        restaurant_uuid: slug,
+        terminal_id: terminalId,
+      }),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    const data = await (await response).json();
+    setOrder(data);
+    console.log(data);
+  };
+
+  useEffect(() => {
+    if (order?.status === "PENDING") {
+      const interval = setInterval(() => {
+        checkOrder();
+      }, 500);
+
+      return () => clearInterval(interval);
+    }
+  }, [order]);
+
   useEffect(() => {
     getOrder();
   }, []);
+
+  const estado = { READY: "Listo", PENDING: "En proceso" };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -87,22 +130,36 @@ const Page = ({ params }: PageProps) => {
           <h1 className="mb-2 text-2xl font-bold text-gray-800">Tu Pedido</h1>
           <div className="p-4 rounded-lg bg-blue-50">
             <p className="text-sm text-gray-600">Número de orden</p>
-            <p className="text-xl font-semibold text-blue-600">#{terminalId}</p>
+            <p className="text-xl font-semibold text-blue-600">
+              #{order?.order_id}
+            </p>
           </div>
         </div>
 
         <div className="mb-6 space-y-4">
           <div>
             <p className="text-sm text-gray-600">Nombre</p>
-            <p className="text-lg font-medium">Juan Pérez</p>
+            <p className="text-lg font-medium text-zinc-700">
+              {order?.customer_name}
+            </p>
           </div>
 
           <div>
             <p className="text-sm text-gray-600">Estado del pedido</p>
             <div className="flex items-center">
-              <div className="w-3 h-3 mr-2 bg-yellow-400 rounded-full"></div>
-              <p className="text-lg font-medium text-yellow-600">
-                En preparación
+              <div
+                className={`w-3 h-3 mr-2  rounded-full ${
+                  order?.status === "PENDING" ? "bg-yellow-400" : "bg-green-400"
+                }`}
+              ></div>
+              <p
+                className={`text-lg font-medium  ${
+                  order?.status === "PENDING "
+                    ? "text-yellow-600"
+                    : "text-green-600"
+                }`}
+              >
+                {order && estado[order?.status as "PENDING" | "READY"]}
               </p>
             </div>
           </div>
