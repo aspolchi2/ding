@@ -3,7 +3,6 @@ import { BACKEND_URL } from "@/app/config/constant";
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    console.log("Request body:", body);
     const response = await fetch(`${BACKEND_URL}/auth/login/`, {
       method: "POST",
       headers: {

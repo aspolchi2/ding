@@ -1,4 +1,9 @@
 "use client";
+import {
+  registerServiceWorker,
+  requestNotificationPermission,
+  subscribeToPush,
+} from "@/app/utils/notifications";
 import React, { use, useEffect, useState } from "react";
 
 interface PageProps {
@@ -29,6 +34,20 @@ const Page = ({ params }: PageProps) => {
   //@ts-expect-error params used in use()
   const { slug, terminalId } = use(params);
 
+  useEffect(() => {
+    const initNotifications = async () => {
+      const registration = await registerServiceWorker();
+      const hasPermission = await requestNotificationPermission();
+
+      if (registration && hasPermission) {
+        const subscription = await subscribeToPush(registration);
+        // Envía subscription al backend
+      }
+    };
+
+    initNotifications();
+  }, []);
+
   const getOrder = async () => {
     const body = JSON.stringify({
       terminal_id: terminalId,
@@ -49,7 +68,6 @@ const Page = ({ params }: PageProps) => {
 
       const data = await response.json();
       setOrder(data);
-      console.log(data);
     } catch (error) {
       console.error("Error:", error);
     }
@@ -73,10 +91,10 @@ const Page = ({ params }: PageProps) => {
   };
 
   useEffect(() => {
-    if (order?.status === "PENDING") {
+    if (order?.status === "PENDING" || order?.status === "READY") {
       const interval = setInterval(() => {
         checkOrder();
-      }, 500);
+      }, 5000);
 
       return () => clearInterval(interval);
     }
@@ -86,7 +104,11 @@ const Page = ({ params }: PageProps) => {
     getOrder();
   }, []);
 
-  const estado = { READY: "Listo", PENDING: "En proceso" };
+  const estado = {
+    READY: "Listo",
+    PENDING: "En proceso",
+    RETRIEVED: "Retirado",
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -131,7 +153,7 @@ const Page = ({ params }: PageProps) => {
           <div className="p-4 rounded-lg bg-blue-50">
             <p className="text-sm text-gray-600">Número de orden</p>
             <p className="text-xl font-semibold text-blue-600">
-              #{order?.order_id}
+              #{order?.order_id || "0000"} 
             </p>
           </div>
         </div>

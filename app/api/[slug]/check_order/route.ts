@@ -1,9 +1,11 @@
 import { BACKEND_URL } from "@/app/config/constant";
+import { cookies } from "next/headers";
 
 export async function POST(
   request: Request,
   { params }: { params: Promise<{ slug: string }> }
 ) {
+  const cookieStore = await cookies();
   try {
     const body = await request.json();
     const response = await fetch(
@@ -29,6 +31,10 @@ export async function POST(
     }
 
     const data = await response.json();
+    console.log(data, "data")
+    if (data.status === "RETRIEVED") {
+      cookieStore.delete("order_id");
+    }
     return Response.json(data);
   } catch (error) {
     console.error("Create order error:", error);

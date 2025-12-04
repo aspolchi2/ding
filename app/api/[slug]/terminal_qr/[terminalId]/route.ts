@@ -1,4 +1,5 @@
 import { BACKEND_URL } from "@/app/config/constant";
+import { cookies } from "next/headers";
 
 export async function GET(
   request: Request,
@@ -44,8 +45,31 @@ export async function POST(
   { params }: { params: Promise<{ slug: string; terminalId: string }> }
 ) {
   try {
+    const cookieStore = await cookies();
     const body = await request.json();
-    console.log(body);
+    const orderIDFromCookie = cookieStore.get("order_id")?.value;
+    if (orderIDFromCookie) {
+      console.log("Order ID from cookie:", orderIDFromCookie);
+      const response = await fetch(
+        `${BACKEND_URL}/view_order/${orderIDFromCookie}/check/`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            restaurant_uuid: body.restaurant_uuid,
+            terminal_id: body.terminal_id,
+          }),
+        }
+      );
+      const data = await response.json();
+      if (data.status === "RETRIEVED") {
+        cookieStore.delete("order_id");
+      }
+      return Response.json(data);
+    }
+
     const response = await fetch(`${BACKEND_URL}/view_order/`, {
       method: "POST",
       headers: {
@@ -60,11 +84,11 @@ export async function POST(
         { status: response.status }
       );
     }
-
     const data = await response.json();
+    cookieStore.set("order_id", data.order_id);
     return Response.json(data);
   } catch (error) {
-    console.error("Create order error:", error);
+    console.error("terminalID error:", error);
     return Response.json(
       //@ts-expect-error message might not exist on all error types
       { error: "Failed to create order", details: error.message },

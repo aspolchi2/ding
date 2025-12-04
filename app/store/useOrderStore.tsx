@@ -18,7 +18,7 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
   setOrders: (orders) => set({ orders }),
   addOrder: (order) =>
     set((state) => ({
-      orders: [...state.orders, order],
+      orders: [order, ...state.orders],
     })),
   getActiveOrders: () =>
     get().orders.filter((order) => order.status !== "RETRIEVED"),
