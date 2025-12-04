@@ -75,14 +75,39 @@ const Page = ({ params }: PageProps) => {
   };
 
   // WebSocket para actualizaciones en tiempo real
-  const wsOrder = useOrderWebSocket(slug, terminalId, order?.order_id);
+  const { order: wsOrder, isConnected } = useOrderWebSocket(slug, terminalId, order?.order_id);
 
   useEffect(() => {
     if (wsOrder) {
-      //@ts-expect-error some
       setOrder(wsOrder);
     }
   }, [wsOrder]);
+
+  // Fallback: polling si WebSocket no está conectado
+  const checkOrder = async () => {
+    if (isConnected) return; // No hacer polling si WebSocket está activo
+    
+    const response = await fetch(`/api/${slug}/check_order`, {
+      method: "POST",
+      body: JSON.stringify({
+        order_id: order?.order_id,
+        restaurant_uuid: slug,
+        terminal_id: terminalId,
+      }),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    const data = await response.json();
+    setOrder(data);
+  };
+
+  useEffect(() => {
+    if (!isConnected && (order?.status === "PENDING" || order?.status === "READY")) {
+      const interval = setInterval(checkOrder, 5000);
+      return () => clearInterval(interval);
+    }
+  }, [order, isConnected]);
 
   useEffect(() => {
     getOrder();
