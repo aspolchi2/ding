@@ -5,6 +5,7 @@ import {
   subscribeToPush,
 } from "@/app/utils/notifications";
 import React, { use, useEffect, useState } from "react";
+import { useOrderWebSocket } from "@/app/hooks/useOrderWebSocket";
 
 interface PageProps {
   params: {
@@ -73,32 +74,15 @@ const Page = ({ params }: PageProps) => {
     }
   };
 
-  const checkOrder = async () => {
-    const response = fetch(`/api/${slug}/check_order`, {
-      method: "POST",
-      body: JSON.stringify({
-        order_id: order?.order_id,
-        restaurant_uuid: slug,
-        terminal_id: terminalId,
-      }),
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-    const data = await (await response).json();
-    setOrder(data);
-    console.log(data);
-  };
+  // WebSocket para actualizaciones en tiempo real
+  const wsOrder = useOrderWebSocket(slug, terminalId, order?.order_id);
 
   useEffect(() => {
-    if (order?.status === "PENDING" || order?.status === "READY") {
-      const interval = setInterval(() => {
-        checkOrder();
-      }, 5000);
-
-      return () => clearInterval(interval);
+    if (wsOrder) {
+      //@ts-expect-error some
+      setOrder(wsOrder);
     }
-  }, [order]);
+  }, [wsOrder]);
 
   useEffect(() => {
     getOrder();

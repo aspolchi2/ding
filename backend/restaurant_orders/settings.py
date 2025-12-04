@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'orders',
     'rest_framework',
     'corsheaders',
+    'channels',
 ]
 
 REST_FRAMEWORK = {
@@ -87,6 +88,13 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'restaurant_orders.wsgi.application'
+ASGI_APPLICATION = 'restaurant_orders.asgi.application'
+
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels.layers.InMemoryChannelLayer',
+    },
+}
 
 
 # Database
