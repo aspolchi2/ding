@@ -5,7 +5,7 @@ import {
   subscribeToPush,
 } from "@/app/utils/notifications";
 import React, { use, useEffect, useState } from "react";
-import { useOrderWebSocket } from "@/app/hooks/useOrderWebSocket";
+import { useOrderWebSocket, Order } from "@/app/hooks/useOrderWebSocket";
 
 interface PageProps {
   params: {
@@ -13,25 +13,14 @@ interface PageProps {
     terminalId: string;
   };
 }
-interface order {
-  id: number;
-  uuid: string;
-  order_id: string;
-  customer_name: string;
-  terminal_id: string;
-  status: string;
-  created_at: string;
-  first_viewed_at: string;
-  last_viewed_at: null;
-  restaurant_user: number;
-}
+
 
 const Page = ({ params }: PageProps) => {
   const [whatsappNumber, setWhatsappNumber] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [showOrderInput, setShowOrderInput] = useState(false);
   const [orderNumber, setOrderNumber] = useState("");
-  const [order, setOrder] = useState<order>();
+  const [order, setOrder] = useState<Order>();
   //@ts-expect-error params used in use()
   const { slug, terminalId } = use(params);
 
@@ -75,14 +64,39 @@ const Page = ({ params }: PageProps) => {
   };
 
   // WebSocket para actualizaciones en tiempo real
-  const wsOrder = useOrderWebSocket(slug, terminalId, order?.order_id);
+  const { order: wsOrder, isConnected } = useOrderWebSocket(slug, terminalId, order?.order_id);
 
   useEffect(() => {
     if (wsOrder) {
-      //@ts-expect-error some
       setOrder(wsOrder);
     }
   }, [wsOrder]);
+
+  // Fallback: polling si WebSocket no está conectado
+  const checkOrder = async () => {
+    if (isConnected) return; // No hacer polling si WebSocket está activo
+    
+    const response = await fetch(`/api/${slug}/check_order`, {
+      method: "POST",
+      body: JSON.stringify({
+        order_id: order?.order_id,
+        restaurant_uuid: slug,
+        terminal_id: terminalId,
+      }),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    const data = await response.json();
+    setOrder(data);
+  };
+
+  useEffect(() => {
+    if (!isConnected && (order?.status === "PENDING" || order?.status === "READY")) {
+      const interval = setInterval(checkOrder, 5000);
+      return () => clearInterval(interval);
+    }
+  }, [order, isConnected]);
 
   useEffect(() => {
     getOrder();
