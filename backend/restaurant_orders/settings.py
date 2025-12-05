@@ -12,6 +12,7 @@ CORS_ALLOW_ALL_ORIGINS = True
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.getenv("SECRET_KEY")
+print(SECRET_KEY)
 if not SECRET_KEY:
     # Esto forzará un error si la llave no está en Render (buena práctica de seguridad)
     raise Exception("SECRET_KEY no definida. Configúrala en Render.")
@@ -40,6 +41,12 @@ INSTALLED_APPS = [
     'corsheaders',
     'channels',
 ]
+
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels.layers.InMemoryChannelLayer',  # o Redis más adelante
+    },
+}
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [

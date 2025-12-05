@@ -1,1 +1,1 @@
-web: gunicorn restaurant_orders.wsgi:application
+web: daphne restaurant_orders.asgi:application
