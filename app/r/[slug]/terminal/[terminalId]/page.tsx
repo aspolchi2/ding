@@ -5,7 +5,7 @@ import {
   subscribeToPush,
 } from "@/app/utils/notifications";
 import React, { use, useEffect, useState } from "react";
-import { useOrderWebSocket } from "@/app/hooks/useOrderWebSocket";
+import { useOrderWebSocket, Order } from "@/app/hooks/useOrderWebSocket";
 
 interface PageProps {
   params: {
@@ -13,25 +13,14 @@ interface PageProps {
     terminalId: string;
   };
 }
-interface order {
-  id: number;
-  uuid: string;
-  order_id: string;
-  customer_name: string;
-  terminal_id: string;
-  status: string;
-  created_at: string;
-  first_viewed_at: string;
-  last_viewed_at: null;
-  restaurant_user: number;
-}
+
 
 const Page = ({ params }: PageProps) => {
   const [whatsappNumber, setWhatsappNumber] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [showOrderInput, setShowOrderInput] = useState(false);
   const [orderNumber, setOrderNumber] = useState("");
-  const [order, setOrder] = useState<order>();
+  const [order, setOrder] = useState<Order>();
   //@ts-expect-error params used in use()
   const { slug, terminalId } = use(params);
 

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 
-interface Order {
+export interface Order {
   id: number;
   uuid: string;
   order_id: string;
